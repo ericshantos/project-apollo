@@ -1,0 +1,6 @@
+training:
+  total_timesteps: 1000000
+  evaluation_frequency: 10000
+  save_frequency: 50000
+  seed: 42
+  device: cpu
