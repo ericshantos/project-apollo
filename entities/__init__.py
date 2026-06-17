@@ -1,7 +1,13 @@
-from .asteroid import Asteroid
-from .bullet import Bullet
-from .bullet_manager import BulletManager
-from .player import Player
-from .saucer import Saucer
+from .asteroid import Asteroid, AsteroidManager
+from .bullet import Bullet, BulletManager
+from .ship import Player, Saucer, SaucerManager
 
-__all__ = ["Asteroid", "Bullet", "Player", "Saucer", "BulletManager"]
+__all__ = [
+    "Asteroid",
+    "AsteroidManager",
+    "Bullet",
+    "Player",
+    "Saucer",
+    "SaucerManager",
+    "BulletManager",
+]

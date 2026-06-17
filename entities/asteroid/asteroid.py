@@ -8,8 +8,8 @@ import pygame
 
 from configs import cfg
 
-from .saucer import Saucer
-from .typed import AsteroidParticle
+from ..ship import Saucer
+from .typed import Particle
 
 
 class Asteroid:
@@ -21,7 +21,7 @@ class Asteroid:
 
     MAX_SPEED: float = SMALL_SPEED
 
-    ASTEROID_POINTS: dict[int, int] = {1: 3, 2: 2, 3: 1}
+    _ASTEROID_POINT: dict[int, int] = {1: 100, 2: 50, 3: 20}
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class Asteroid:
             self.radius = 8
 
         self.is_alive: bool = True
-        self.particles: list[AsteroidParticle] = []
+        self.particles: list[Particle] = []
 
         self.velocity_x: float
         self.velocity_y: float
@@ -88,6 +88,8 @@ class Asteroid:
             self.points.append(
                 ((px + jitter_x) * self.radius, (py + jitter_y) * self.radius)
             )
+
+        self._asteroids_point: dict[int, int] = {1: 100, 2: 50, 3: 20}
 
         self.saucer: Saucer | None = None
         self.last_saucer_spawn = pygame.time.get_ticks()
@@ -150,7 +152,7 @@ class Asteroid:
         elif self.y > height + self.radius:
             self.y = -self.radius
 
-    def split(self) -> list[Asteroid]:
+    def create_children(self, quantity: int) -> list[Asteroid]:
         if self.size == 1:
             return []
 
@@ -162,5 +164,20 @@ class Asteroid:
                 x=self.x,
                 y=self.y,
             )
-            for _ in range(2)
+            for _ in range(quantity)
         ]
+
+    def draw(self, screen: pygame.Surface) -> None:
+        if not self.is_alive:
+            for p in self.particles:
+                if p["alpha"] > 0:
+                    color = (p["alpha"], p["alpha"], p["alpha"])
+                    pygame.draw.circle(screen, color, (int(p["x"]), int(p["y"])), 1)
+            return
+
+        transformed_points = [(self.x + px, self.y + py) for px, py in self.points]
+        pygame.draw.polygon(screen, (255, 255, 255), transformed_points, 2)
+
+    @classmethod
+    def points(cls, size: int) -> int:
+        return cls._ASTEROID_POINT.get(size, 0)

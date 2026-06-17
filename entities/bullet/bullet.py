@@ -1,4 +1,5 @@
 import numpy as np
+import pygame
 
 
 class Bullet:
@@ -39,3 +40,8 @@ class Bullet:
             self.y = height + self.RADIUS
         elif self.y > height + self.RADIUS:
             self.y = -self.RADIUS
+
+    def draw(self, screen: pygame.Surface) -> None:
+        pygame.draw.circle(
+            screen, (255, 255, 255), (int(self.x), int(self.y)), self.RADIUS
+        )

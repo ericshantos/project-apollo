@@ -9,6 +9,7 @@ class ActionMap:
     rotate_left: bool = False
     thrust: bool = False
     shoot: bool = False
+    hyperspace: bool = False
 
 
 class Action(IntEnum):
@@ -17,13 +18,14 @@ class Action(IntEnum):
     RIGHT = 2
     THRUST = 3
     SHOOT = 4
-    THRUST_SHOOT = 5
-    LEFT_THRUST = 6
-    RIGHT_THRUST = 7
-    LEFT_SHOOT = 8
-    RIGHT_SHOOT = 9
-    LEFT_THRUST_SHOOT = 10
-    RIGHT_THRUST_SHOOT = 11
+    HYPERSPACE = 5
+    THRUST_SHOOT = 6
+    LEFT_THRUST = 7
+    RIGHT_THRUST = 8
+    LEFT_SHOOT = 9
+    RIGHT_SHOOT = 10
+    LEFT_THRUST_SHOOT = 11
+    RIGHT_THRUST_SHOOT = 12
 
 
 class ActionSpace:
@@ -46,6 +48,9 @@ class ActionSpace:
 
             case Action.SHOOT:
                 return ActionMap(shoot=True)
+
+            case Action.HYPERSPACE:
+                return ActionMap(hyperspace=True)
 
             case Action.THRUST_SHOOT:
                 return ActionMap(thrust=True, shoot=True)

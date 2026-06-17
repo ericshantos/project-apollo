@@ -1,11 +1,14 @@
 screen:
-  width: 700
-  height: 1000
+  width: 1000
+  height: 600
+  fps: 60
+  window_title: "Asteroid - Project Apollo"
 
 game:
   max_lives: 3
+  initial_asteroids: 4
   max_asteroids: 10
-  max_steps_per_episode: 5000
+  max_steps_per_episode: 10000
 
 reward:
   player_died: 50.0

@@ -1,3 +1,5 @@
+import pygame
+
 from .bullet import Bullet
 
 
@@ -14,12 +16,21 @@ class BulletManager:
 
         self.clean_expired_bullets()
 
-    def get_bullets(self) -> list[Bullet]:
-        return self.bullets
-
-    def remove_bullet(self, bullet: Bullet) -> None:
+    def remove(self, bullet: Bullet) -> None:
         if bullet in self.bullets:
             self.bullets.remove(bullet)
 
     def clean_expired_bullets(self) -> None:
         self.bullets = [bullet for bullet in self.bullets if bullet.is_alive()]
+
+    def draw(self, screen: pygame.Surface) -> None:
+        for bullet in self.bullets:
+            bullet.draw(screen)
+
+    @property
+    def is_empty(self) -> bool:
+        return self.count == 0
+
+    @property
+    def count(self) -> int:
+        return len(self.bullets)

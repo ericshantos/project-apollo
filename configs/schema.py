@@ -5,11 +5,14 @@ from dataclasses import dataclass
 class ScreenConfig:
     width: int
     height: int
+    fps: int
+    window_title: str
 
 
 @dataclass
 class GameConfig:
     max_lives: int
+    initial_asteroids: int
     max_asteroids: int
     max_steps_per_episode: int
 

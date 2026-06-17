@@ -18,10 +18,14 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
         "render_fps": 60,
     }
 
-    def __init__(self) -> None:
+    def __init__(self, render_mode: str | None) -> None:
         super().__init__()
 
-        self.world: GameWorld = GameWorld(cfg.screen.width, cfg.screen.height)
+        self.render_mode = render_mode
+
+        self.world: GameWorld = GameWorld(
+            cfg.screen.width, cfg.screen.height, (render_mode == "human")
+        )
 
         self.reward_system: RewardFunction = RewardFunction()
 
@@ -54,9 +58,21 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         self.current_step += 1
 
+        if self.render_mode == "human":
+            running = self.world.renderer.handle_events()
+
+            if not running:
+                self.world.done = True
+
+                observation = Observation.build(self.world)
+
+                return (observation, 0.0, True, False, {})
+
         action = ActionSpace.to_action(action_id)
 
         self.world.update(action)
+
+        self.render()
 
         observation = Observation.build(self.world)
 
@@ -70,7 +86,7 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
             truncated = True
 
         info = {
-            "score": self.world.get_score(),
+            "score": self.world.score,
             "wave": self.world.wave,
             "frame_count": self.world.frame_count,
             "asteroid_destroyed": self.world.asteroids_destroyed,
@@ -82,7 +98,8 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
         return (observation, reward, terminated, truncated, info)
 
     def render(self) -> None:
-        self.world.render()
+        if self.render_mode == "human":
+            self.world.render()
 
     def close(self) -> None:
         pass

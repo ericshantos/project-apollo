@@ -15,7 +15,7 @@ class RewardFunction:
     def compute(self, world: GameWorld) -> float:
         reward = cfg.reward.survive_step
 
-        current_score = world.get_score()
+        current_score = world.score
 
         score_delta = current_score - self.previous_score
 
@@ -23,7 +23,7 @@ class RewardFunction:
 
         self.previous_score = current_score
 
-        current_lives = world.get_player().lives
+        current_lives = world.player_lives
 
         if current_lives < self.previous_lives:
             reward -= cfg.reward.player_died
