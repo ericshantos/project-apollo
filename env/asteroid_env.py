@@ -18,7 +18,7 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
         "render_fps": 60,
     }
 
-    def __init__(self, render_mode: str | None) -> None:
+    def __init__(self, render_mode: str | None = None) -> None:
         super().__init__()
 
         self.render_mode = render_mode

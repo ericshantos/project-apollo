@@ -10,6 +10,7 @@ dependencies = [
     "pygame",
     "dacite",
     "gymnasium",
+    "stable-baselines3"
 ]
 
 [project.optional-dependencies]

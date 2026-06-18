@@ -1,11 +1,20 @@
 dqn:
   learning_rate: 0.0001
   gamma: 0.99
-  batch_size: 64
-  replay_buffer_size: 100000
-  target_update_frequency: 1000
 
-  epsilon:
-    start: 1.0
-    end: 0.01
-    decay: 500000
+  buffer_size: 100000
+  batch_size: 64
+
+  learning_starts: 10000
+
+  train_freq: 4
+  gradient_steps: 1
+
+  target_update_interval: 1000
+
+  exploration:
+    initial_eps: 1.0
+    final_eps: 0.01
+    fraction: 0.5
+
+  total_timesteps: 1000000

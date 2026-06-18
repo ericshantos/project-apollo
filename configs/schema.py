@@ -39,20 +39,23 @@ class RLConfig:
 
 
 @dataclass
-class EpsilonConfig:
-    start: float
-    end: float
-    decay: float
+class ExplorationConfig:
+    initial_eps: float
+    final_eps: float
+    fraction: float
 
 
 @dataclass
 class DQNConfig:
     learning_rate: float
     gamma: float
+    buffer_size: int
     batch_size: int
-    replay_buffer_size: int
-    target_update_frequency: int
-    epsilon: EpsilonConfig
+    learning_starts: int
+    train_freq: int
+    target_update_interval: int
+    total_timesteps: int
+    exploration: ExplorationConfig
 
 
 @dataclass
