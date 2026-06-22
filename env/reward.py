@@ -1,6 +1,7 @@
 from configs import cfg
 
 from .game_world import GameWorld
+from .action_space import ActionMap
 
 
 class RewardFunction:
@@ -12,7 +13,7 @@ class RewardFunction:
         self.previous_score = 0
         self.previous_lives = cfg.game.max_lives
 
-    def compute(self, world: GameWorld) -> float:
+    def compute(self, world: GameWorld, action: ActionMap) -> float:
         reward = cfg.reward.survive_step
 
         current_score = world.score
@@ -30,14 +31,22 @@ class RewardFunction:
 
         self.previous_lives = current_lives
 
+        if action.rotate_left:
+            reward -= 0.001
+
+        if action.rotate_right:
+            reward -= 0.001
+
+        if action.thrust:
+            reward -= 0.002
+
+        if action.shoot:
+            reward -= 0.003
+
+        if action.hyperspace:
+            reward -= 0.01
+
         if world.is_done():
             reward -= 20
-
-        if (
-            not world.player.is_accelerating
-            and abs(world.player.velocity_x) < 0.1
-            and abs(world.player.velocity_y) < 0.1
-        ):
-            reward += cfg.reward.idle_penalty
 
         return reward

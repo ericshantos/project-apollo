@@ -76,7 +76,7 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
 
         observation = Observation.build(self.world)
 
-        reward = self.reward_system.compute(self.world)
+        reward = self.reward_system.compute(self.world, action)
 
         terminated = self.world.is_done()
 

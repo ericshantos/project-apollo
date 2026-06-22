@@ -52,7 +52,7 @@ class Player(Shooter, Destroyable):
     @property
     def lives(self) -> int:
         return self._lives
-
+        
     @lives.setter
     def lives(self, value) -> None:
         self._lives = max(0, min(self.MAX_LIVES, value))
