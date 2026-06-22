@@ -39,6 +39,8 @@ class Player(Shooter, Destroyable):
 
         self.is_accelerating: bool = False
 
+        self.used_hyperspace_this_step: bool = False
+
         self.is_alive: bool = True
         self._lives: int = self.MAX_LIVES
 
@@ -74,7 +76,11 @@ class Player(Shooter, Destroyable):
         self.velocity_x = 0
         self.velocity_y = 0
 
+        self.used_hyperspace_this_step = True
+
     def update(self, action: ActionMap, width: int, height: int) -> None:
+        self.used_hyperspace_this_step = False
+
         if not self.is_alive:
             self.explosion.update()
 
@@ -133,6 +139,9 @@ class Player(Shooter, Destroyable):
         self.angle = 0
         self.velocity_x = 0
         self.velocity_y = 0
+
+        self.hyperspace_manager.reset()
+
         self.explosion.reset()
         self.is_alive = True
         self.is_accelerating = False

@@ -6,7 +6,9 @@ class HyperspaceManager:
     INCREMENT: float = 0.003
 
     def __init__(self) -> None:
-        self.uses: int = 0
+        self.uses: int
+
+        self.reset()
 
     def teleport(
         self,
