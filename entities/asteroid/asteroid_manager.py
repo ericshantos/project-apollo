@@ -4,14 +4,14 @@ import numpy as np
 import pygame
 
 from .asteroid import Asteroid
+from env.toroidal_space import ToroidalSpace
 
 
 class AsteroidManager:
     MAX_ASTEROIDS: int = 26
 
-    def __init__(self, screen_width: int, screen_height: int) -> None:
-        self.width = screen_width
-        self.height = screen_height
+    def __init__(self, space: ToroidalSpace) -> None:
+        self.space = space
 
         self.asteroids: list[Asteroid] = []
 
@@ -21,8 +21,8 @@ class AsteroidManager:
         self.asteroids.clear()
 
         while len(self.asteroids) < quantity:
-            x = random.randint(0, self.width)
-            y = random.randint(0, self.height)
+            x = random.randint(0, self.space.width)
+            y = random.randint(0, self.space.height)
 
             dx = x - player_x
             dy = y - player_y
@@ -33,12 +33,12 @@ class AsteroidManager:
                 continue
 
             self.asteroids.append(
-                Asteroid(screen_width=self.width, screen_height=self.height, x=x, y=y)
+                Asteroid(space=self.space, x=x, y=y)
             )
 
     def update(self) -> None:
         for asteroid in self.asteroids:
-            asteroid.update(self.width, self.height)
+            asteroid.update()
 
     def draw(self, surface: pygame.Surface) -> None:
         for asteroid in self.asteroids:

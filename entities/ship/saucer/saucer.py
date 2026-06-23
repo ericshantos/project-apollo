@@ -7,6 +7,7 @@ import pygame
 from ..destroyed import Destroyable
 from ..ship import Shooter
 from .saucer_explosion_effect import SaucerExplosionEffect
+from env.toroidal_space import ToroidalSpace
 
 
 class Saucer(Shooter, Destroyable):
@@ -19,13 +20,11 @@ class Saucer(Shooter, Destroyable):
 
     def __init__(
         self,
-        screen_width: int,
-        screen_height: int,
+        space: ToroidalSpace,
         size_type: Literal["large", "small"] = "large",
         aim_error: float = 45.0,
     ) -> None:
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+        self.space = space
         self.size_type = size_type
 
         self.aim_error = aim_error
@@ -54,8 +53,8 @@ class Saucer(Shooter, Destroyable):
         ]
 
         self.direction: Literal[-1, 1] = random.choice([-1, 1])
-        self.x: float = -20.0 if self.direction == 1 else float(screen_width + 20)
-        self.y: float = float(random.randint(50, screen_height - 50))
+        self.x: float = -20.0 if self.direction == 1 else float(self.space.width + 20)
+        self.y: float = float(random.randint(50, self.space.height - 50))
 
         if self.size_type == "large":
             self.speed_x = 2.0 * self.direction
@@ -95,11 +94,11 @@ class Saucer(Shooter, Destroyable):
             if self.y < 60:
                 self.y = 60
                 self.speed_y = 1.5
-            elif self.y > self.screen_height - 60:
-                self.y = self.screen_height - 60
+            elif self.y > self.space.height - 60:
+                self.y = self.space.height - 60
                 self.speed_y = -1.5
 
-            if (self.direction == 1 and self.x > self.screen_width + 30) or (
+            if (self.direction == 1 and self.x > self.space.width + 30) or (
                 self.direction == -1 and self.x < -30
             ):
                 self.is_alive = False
@@ -113,7 +112,7 @@ class Saucer(Shooter, Destroyable):
             if not self.explosion.is_active:
                 self.is_exploding = False
 
-        self.bullet_manager.update(self.screen_width, self.screen_height)
+        self.bullet_manager.update(self.space.width, self.space.height)
 
     def die(self) -> None:
         if not self.is_alive:

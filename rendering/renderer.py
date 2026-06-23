@@ -10,7 +10,7 @@ class Renderer:
         pygame.init()
 
         self.screen: pygame.Surface = pygame.display.set_mode(
-            (world.width, world.height)
+            (world.space.width, world.space.height)
         )
 
         self.clock: pygame.time.Clock = pygame.time.Clock()

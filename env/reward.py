@@ -46,7 +46,7 @@ class RewardFunction:
             reward -= 0.003
 
         if action.hyperspace:
-            reward -= 0.005
+            reward -= 0.01
 
         if world.is_done():
             reward -= 10
