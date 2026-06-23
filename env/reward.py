@@ -6,8 +6,10 @@ from .action_space import ActionMap
 
 class RewardFunction:
     def __init__(self) -> None:
-        self.previous_score: int = 0
-        self.previous_lives: int = cfg.game.max_lives
+        self.previous_score: int
+        self.previous_lives: int
+
+        self.reset()
 
     def reset(self) -> None:
         self.previous_score = 0
@@ -20,14 +22,14 @@ class RewardFunction:
 
         score_delta = current_score - self.previous_score
 
-        reward += score_delta
+        reward += score_delta * 0.01
 
         self.previous_score = current_score
 
         current_lives = world.player_lives
 
         if current_lives < self.previous_lives:
-            reward -= cfg.reward.player_died
+            reward -= 3.0
 
         self.previous_lives = current_lives
 
@@ -44,9 +46,9 @@ class RewardFunction:
             reward -= 0.003
 
         if action.hyperspace:
-            reward -= 0.01
+            reward -= 0.005
 
         if world.is_done():
-            reward -= 20
+            reward -= 10
 
         return reward
