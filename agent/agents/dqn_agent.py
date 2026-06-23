@@ -2,7 +2,7 @@ from pathlib import Path
 
 from stable_baselines3 import DQN
 
-from .callback import ApolloMetricsCallback
+from ..callbacks import ApolloMetricsCallback
 
 
 class DQNAgent:
