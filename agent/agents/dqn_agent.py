@@ -6,10 +6,13 @@ from ..callbacks import ApolloMetricsCallback
 from configs.schema import DQNConfig
 from env.observation import Observation
 from env import AsteroidEnv
+from training import DeviceManager
 
 
 class DQNAgent:
     def __init__(self, env: AsteroidEnv, config: DQNConfig) -> None:
+
+        device: DeviceManager = DeviceManager(prefer_gpu=True).get_device()
 
         policy_kwargs: dict[str, list[int]] = dict(net_arch=[128, 128])
 
@@ -23,6 +26,7 @@ class DQNAgent:
             tensorboard_log="./logs/tensorboard",
             learning_starts=config.learning_starts,
             policy_kwargs=policy_kwargs,
+            device=device,
             target_update_interval=config.target_update_interval,
             verbose=1,
         )
