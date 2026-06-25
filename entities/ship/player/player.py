@@ -5,6 +5,7 @@ import pygame
 
 from configs import cfg
 from env.action_space import ActionMap
+from env.toroidal_space import ToroidalSpace
 
 from ..destroyed import Destroyable
 from ..ship import Shooter
@@ -24,20 +25,24 @@ class Player(Shooter, Destroyable):
 
     RESPAWN_DELAY: int = 90
 
-    def __init__(self, x: float, y: float) -> None:
+    def __init__(self, x: float, y: float, space: ToroidalSpace) -> None:
         super().__init__()
 
         self.start_x: float = x
         self.start_y: float = y
 
-        self.x: float = x
-        self.y: float = y
+        self.x = x
+        self.y = y
+
+        self.space = space
 
         self.angle: float = 0
         self.velocity_x: float = 0
         self.velocity_y: float = 0
 
         self.is_accelerating: bool = False
+
+        self.used_hyperspace_this_step: bool = False
 
         self.is_alive: bool = True
         self._lives: int = self.MAX_LIVES
@@ -50,7 +55,7 @@ class Player(Shooter, Destroyable):
     @property
     def lives(self) -> int:
         return self._lives
-
+        
     @lives.setter
     def lives(self, value) -> None:
         self._lives = max(0, min(self.MAX_LIVES, value))
@@ -61,7 +66,7 @@ class Player(Shooter, Destroyable):
     def lose_life(self) -> None:
         self._lives = max(0, self._lives - 1)
 
-    def use_hyperspace(self, width: int, height: int) -> None:
+    def use_hyperspace(self) -> None:
         if not self.is_alive:
             return
 
@@ -69,12 +74,19 @@ class Player(Shooter, Destroyable):
             self.die()
             return
 
-        self.x, self.y = self.hyperspace_manager.teleport(width, height)
+        self.x, self.y = self.hyperspace_manager.teleport(
+            self.space.width, 
+            self.space.height
+        )
 
         self.velocity_x = 0
         self.velocity_y = 0
 
-    def update(self, action: ActionMap, width: int, height: int) -> None:
+        self.used_hyperspace_this_step = True
+
+    def update(self, action: ActionMap) -> None:
+        self.used_hyperspace_this_step = False
+
         if not self.is_alive:
             self.explosion.update()
 
@@ -111,9 +123,10 @@ class Player(Shooter, Destroyable):
         self.velocity_x *= self.FRICTION
         self.velocity_y *= self.FRICTION
 
-        self.wrap_around(width, height)
+        self.x = self.space.wrap_x(self.x, self.RADIUS)
+        self.y = self.space.wrap_y(self.y, self.RADIUS)
 
-        self.bullet_manager.update(width, height)
+        self.bullet_manager.update(self.space.width, self.space.height)
 
     def die(self) -> None:
         self.is_alive = False
@@ -133,19 +146,12 @@ class Player(Shooter, Destroyable):
         self.angle = 0
         self.velocity_x = 0
         self.velocity_y = 0
+
+        self.hyperspace_manager.reset()
+
         self.explosion.reset()
         self.is_alive = True
         self.is_accelerating = False
-
-    def wrap_around(self, width: int, height: int) -> None:
-        if self.x < -self.RADIUS:
-            self.x = width + self.RADIUS
-        elif self.x > width + self.RADIUS:
-            self.x = -self.RADIUS
-        if self.y < -self.RADIUS:
-            self.y = height + self.RADIUS
-        elif self.y > height + self.RADIUS:
-            self.y = -self.RADIUS
 
     def draw(self, screen: pygame.Surface) -> None:
         if not self.is_alive:

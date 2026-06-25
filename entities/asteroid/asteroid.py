@@ -10,6 +10,7 @@ from configs import cfg
 
 from ..ship import Saucer
 from .typed import Particle
+from env.toroidal_space import ToroidalSpace
 
 
 class Asteroid:
@@ -25,8 +26,7 @@ class Asteroid:
 
     def __init__(
         self,
-        screen_width: int,
-        screen_height: int,
+        space: ToroidalSpace,
         size: Literal[1, 2, 3] = 3,
         x: float | None = None,
         y: float | None = None,
@@ -47,11 +47,11 @@ class Asteroid:
         self.velocity_x: float
         self.velocity_y: float
 
+        self.space = space
+
         if x is None or y is None:
-            self.x, self.y = self._generate_edge_position(screen_width, screen_height)
-            self.velocity_x, self.velocity_y = self._generate_inward_velocity(
-                screen_width, screen_height
-            )
+            self.x, self.y = self._generate_edge_position()
+            self.velocity_x, self.velocity_y = self._generate_inward_velocity()
         else:
             self.x = x
             self.y = y
@@ -95,20 +95,23 @@ class Asteroid:
         self.last_saucer_spawn = pygame.time.get_ticks()
         self.saucer_spawn_interval = 15000
 
-    def _generate_edge_position(self, width: int, height: int) -> tuple[float, float]:
+    def _generate_edge_position(self) -> tuple[float, float]:
         edge = random.choice(["LEFT", "RIGHT", "TOP", "BOTTOM"])
-        if edge == "LEFT":
-            return -self.radius, random.uniform(0, height)
-        elif edge == "RIGHT":
-            return width + self.radius, random.uniform(0, height)
-        elif edge == "TOP":
-            return random.uniform(0, width), -self.radius
-        else:
-            return random.uniform(0, width), height + self.radius
 
-    def _generate_inward_velocity(self, width: int, height: int) -> tuple[float, float]:
-        target_x = random.uniform(width * 0.2, width * 0.8)
-        target_y = random.uniform(height * 0.2, height * 0.8)
+        if edge == "LEFT":
+            return -self.radius, random.uniform(0, self.space.height)
+
+        if edge == "RIGHT":
+            return self.space.width + self.radius, random.uniform(0, self.space.height)
+
+        if edge == "TOP":
+            return random.uniform(0, self.space.width), -self.radius
+
+        return random.uniform(0, self.space.width), self.space.height + self.radius
+
+    def _generate_inward_velocity(self) -> tuple[float, float]:
+        target_x = random.uniform(self.space.width * 0.2, self.space.width * 0.8)
+        target_y = random.uniform(self.space.height * 0.2, self.space.height * 0.8)
         dx, dy = target_x - self.x, target_y - self.y
         distance: float = float(np.hypot(dx, dy))
 
@@ -130,7 +133,7 @@ class Asteroid:
                 }
             )
 
-    def update(self, width: int, height: int) -> None:
+    def update(self) -> None:
         if not self.is_alive:
             for p in self.particles:
                 p["x"] += p["vel_x"]
@@ -140,17 +143,9 @@ class Asteroid:
 
         self.x += self.velocity_x
         self.y += self.velocity_y
-        self.wrap_around(width, height)
 
-    def wrap_around(self, width: int, height: int) -> None:
-        if self.x < -self.radius:
-            self.x = width + self.radius
-        elif self.x > width + self.radius:
-            self.x = -self.radius
-        if self.y < -self.radius:
-            self.y = height + self.radius
-        elif self.y > height + self.radius:
-            self.y = -self.radius
+        self.x = self.space.wrap_x(self.x, self.radius)
+        self.y = self.space.wrap_y(self.y, self.radius)
 
     def create_children(self, quantity: int) -> list[Asteroid]:
         if self.size == 1:
@@ -158,8 +153,7 @@ class Asteroid:
 
         return [
             Asteroid(
-                screen_width=cfg.screen.width,
-                screen_height=cfg.screen.height,
+                space=self.space,
                 size=cast(Literal[1, 2, 3], self.size - 1),
                 x=self.x,
                 y=self.y,

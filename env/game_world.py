@@ -6,14 +6,13 @@ from .action_space import ActionMap
 from .collision_manager import CollisionManager
 from .respawn_manager import RespawnManager
 from .score_manager import ScoreManager
+from .toroidal_space import ToroidalSpace
 
 
 class GameWorld:
-    def __init__(self, width: int, height: int, render_mode: True) -> None:
-        self.width: int = width
-        self.height: int = height
+    def __init__(self, space: ToroidalSpace) -> None:
 
-        self.render_mode = render_mode
+        self.space = space
 
         self.frame_count: int
         self.done: bool
@@ -22,8 +21,9 @@ class GameWorld:
         self.asteroid_manager: AsteroidManager
         self.score_manager: ScoreManager
         self.collision_manager: CollisionManager
+        self.space: ToroidalSpace
 
-        self.initial_asteroids: int = cfg.game.initial_asteroids
+        self.initial_asteroids: int
         self.wave: int
 
         self.saucer_spawn_timer: int
@@ -34,23 +34,22 @@ class GameWorld:
 
         self.reset()
 
-        if self.render_mode:
-            self.renderer: Renderer = Renderer(self)
-
     def reset(self) -> None:
         self.frame_count = 0
 
         self.wave = 1
 
-        self.done = False
-
-        self.player = Player(*self.center_world)
-
-        self.saucer_manager = SaucerManager(self.width, self.height)
-
         self.saucer_spawn_timer = 0
 
-        self.asteroid_manager = AsteroidManager(self.width, self.height)
+        self.initial_asteroids: int = cfg.game.initial_asteroids
+
+        self.done = False
+
+        self.player = Player(*self.center_world, self.space)
+
+        self.saucer_manager = SaucerManager(self.space)
+
+        self.asteroid_manager = AsteroidManager(self.space)
 
         self.score_manager = ScoreManager(self.player)
 
@@ -61,6 +60,7 @@ class GameWorld:
         self.asteroid_manager.spawn_wave(
             self.initial_asteroids, self.player.x, self.player.y
         )
+        
 
     def _next_wave(self) -> None:
         self.wave += 1
@@ -89,16 +89,13 @@ class GameWorld:
 
         self.frame_count += 1
 
-        self.player.update(action, self.width, self.height)
+        self.player.update(action)
 
         if action.shoot and self.player.is_alive:
             self.player.shoot()
 
-        # if action.hyperspace:
-        # self.player.use_hyperspace(
-        #    self.width,
-        #    self.height
-        # )
+        if action.hyperspace:
+            self.player.use_hyperspace()
 
         self.asteroid_manager.update()
 
@@ -128,12 +125,6 @@ class GameWorld:
             self.player.start_x, self.player.start_y, self.asteroids
         ):
             self.player.respawn()
-
-    def render(self) -> None:
-        if not self.render_mode:
-            return
-
-        self.renderer.draw()
 
     @property
     def player_alive(self) -> bool:
@@ -186,4 +177,5 @@ class GameWorld:
 
     @property
     def center_world(self) -> tuple[int, int]:
-        return self.width // 2, self.height // 2
+
+        return self.space.width // 2, self.space.height // 2

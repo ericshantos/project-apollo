@@ -3,12 +3,12 @@ import random
 import pygame
 
 from .saucer import Saucer
+from env.toroidal_space import ToroidalSpace
 
 
 class SaucerManager:
-    def __init__(self, screen_width: int, screen_height: int) -> None:
-        self.width = screen_width
-        self.height = screen_height
+    def __init__(self, space: ToroidalSpace) -> None:
+        self.space = space
 
         self.saucer: Saucer | None = None
 
@@ -80,8 +80,7 @@ class SaucerManager:
         aim_error = self._aim_error(score)
 
         self.saucer = Saucer(
-            screen_width=self.width,
-            screen_height=self.height,
+            space=self.space,
             size_type=size_type,
             aim_error=aim_error,
         )

@@ -3,6 +3,7 @@ import numpy as np
 from entities import Asteroid, Player, Saucer
 
 from .game_world import GameWorld
+from .toroidal_space import ToroidalSpace
 
 
 class Observation:
@@ -12,17 +13,13 @@ class Observation:
     TARGET_FEATURES: int = 7
 
     SIZE: int = PLAYER_FEATURES + TARGET_FEATURES + (MAX_ASTEROIDS * TARGET_FEATURES)
+    
+    def __init__(self, space: ToroidalSpace) -> None:
 
-    @staticmethod
-    def _wrap_delta(delta: float, world_size: float) -> float:
-        if delta > world_size / 2:
-            delta -= world_size
-        elif delta < -world_size / 2:
-            delta += world_size
-        return delta
+        self.space = space
 
-    @staticmethod
     def _encode_target(
+        self,
         player: Player,
         target_x: float,
         target_y: float,
@@ -30,26 +27,22 @@ class Observation:
         target_vy: float,
         radius: float,
         max_radius: float,
-        world: GameWorld,
         rad_angle: float,
         max_rel_speed: float,
     ) -> list[float]:
         dx = target_x - player.x
         dy = target_y - player.y
 
-        # wrap-around (mundo toroidal)
-        dx = Observation._wrap_delta(dx, world.width)
-        dy = Observation._wrap_delta(dy, world.height)
+        dx = self.space.delta_x(dx)
+        dy = self.space.delta_y(dy)
 
         target_angle = float(np.arctan2(dy, dx))
 
         rel_angle = (target_angle - rad_angle + np.pi) % (2 * np.pi) - np.pi
 
-        # distância normalizada e CLAMPADA corretamente
-        distance = np.hypot(dx, dy) / np.hypot(world.width, world.height)
+        distance = np.hypot(dx, dy) / np.hypot(self.space.width, self.space.height)
         distance = float(np.clip(distance, 0.0, 1.0))
 
-        # velocidade relativa consistente
         vx_rel = (target_vx - player.velocity_x) / max_rel_speed
         vy_rel = (target_vy - player.velocity_y) / max_rel_speed
 
@@ -68,8 +61,7 @@ class Observation:
             1.0,
         ]
 
-    @staticmethod
-    def build(world: GameWorld) -> np.ndarray:
+    def build(self, world: GameWorld) -> np.ndarray:
         player: Player = world.player
 
         max_rel_speed = (
@@ -78,8 +70,8 @@ class Observation:
             + (Saucer.MAX_SPEED if hasattr(Saucer, "MAX_SPEED") else 0)
         )
 
-        px_norm = float(np.clip(player.x / world.width, 0.0, 1.0))
-        py_norm = float(np.clip(player.y / world.height, 0.0, 1.0))
+        px_norm = float(np.clip(player.x / self.space.width, 0.0, 1.0))
+        py_norm = float(np.clip(player.y / self.space.height, 0.0, 1.0))
 
         vx_norm = float(
             np.clip(
@@ -112,7 +104,7 @@ class Observation:
 
         if saucer is not None:
             obs.extend(
-                Observation._encode_target(
+                self._encode_target(
                     player=player,
                     target_x=saucer.x,
                     target_y=saucer.y,
@@ -120,24 +112,23 @@ class Observation:
                     target_vy=saucer.speed_y,
                     radius=saucer.radius,
                     max_radius=saucer.radius,
-                    world=world,
                     rad_angle=rad_angle,
                     max_rel_speed=max_rel_speed,
                 )
             )
         else:
-            obs.extend([0.0] * Observation.TARGET_FEATURES)
+            obs.extend([0.0] * self.TARGET_FEATURES)
 
         asteroids = sorted(
             world.asteroids,
             key=lambda a: ((a.x - player.x) ** 2 + (a.y - player.y) ** 2),
         )
 
-        visible_asteroids = asteroids[: Observation.MAX_ASTEROIDS]
+        visible_asteroids = asteroids[: self.MAX_ASTEROIDS]
 
         for asteroid in visible_asteroids:
             obs.extend(
-                Observation._encode_target(
+                self._encode_target(
                     player=player,
                     target_x=asteroid.x,
                     target_y=asteroid.y,
@@ -145,15 +136,14 @@ class Observation:
                     target_vy=asteroid.velocity_y,
                     radius=asteroid.radius,
                     max_radius=Asteroid.MAX_RADIUS,
-                    world=world,
                     rad_angle=rad_angle,
                     max_rel_speed=max_rel_speed,
                 )
             )
 
-        missing = Observation.MAX_ASTEROIDS - len(visible_asteroids)
+        missing = self.MAX_ASTEROIDS - len(visible_asteroids)
 
         for _ in range(missing):
-            obs.extend([0.0] * Observation.TARGET_FEATURES)
+            obs.extend([0.0] * self.TARGET_FEATURES)
 
         return np.asarray(obs, dtype=np.float32)

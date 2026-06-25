@@ -10,6 +10,8 @@ from .action_space import ActionSpace
 from .game_world import GameWorld
 from .observation import Observation
 from .reward import RewardFunction
+from .toroidal_space import ToroidalSpace
+from rendering import Renderer
 
 
 class AsteroidEnv(gym.Env[np.ndarray, int]):
@@ -23,9 +25,16 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
 
         self.render_mode = render_mode
 
-        self.world: GameWorld = GameWorld(
-            cfg.screen.width, cfg.screen.height, (render_mode == "human")
+        self.space: ToroidalSpace = ToroidalSpace(
+            cfg.screen.width, cfg.screen.height
         )
+
+        self.world: GameWorld = GameWorld(self.space)
+
+        self.observation: Observation = Observation(self.space)
+
+        if render_mode == "human":
+            self.renderer: Renderer = Renderer(self.world)
 
         self.reward_system: RewardFunction = RewardFunction()
 
@@ -47,11 +56,11 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
         self.world.reset()
         self.reward_system.reset()
 
-        observation = Observation.build(self.world)
+        obs = self.observation.build(self.world)
 
         info: dict[str, int | float] = {}
 
-        return observation, info
+        return obs, info
 
     def step(
         self, action_id: int
@@ -59,14 +68,14 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
         self.current_step += 1
 
         if self.render_mode == "human":
-            running = self.world.renderer.handle_events()
+            running = self.renderer.handle_events()
 
             if not running:
                 self.world.done = True
 
-                observation = Observation.build(self.world)
+                obs = self.observation.build(self.world)
 
-                return (observation, 0.0, True, False, {})
+                return (obs, 0.0, True, False, {})
 
         action = ActionSpace.to_action(action_id)
 
@@ -74,9 +83,9 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
 
         self.render()
 
-        observation = Observation.build(self.world)
+        obs = self.observation.build(self.world)
 
-        reward = self.reward_system.compute(self.world)
+        reward = self.reward_system.compute(self.world, action)
 
         terminated = self.world.is_done()
 
@@ -95,11 +104,13 @@ class AsteroidEnv(gym.Env[np.ndarray, int]):
             "accuracy": self.world.accuracy,
         }
 
-        return (observation, reward, terminated, truncated, info)
+        return (obs, reward, terminated, truncated, info)
 
     def render(self) -> None:
-        if self.render_mode == "human":
-            self.world.render()
+        if self.render_mode != "human":
+            return
+        
+        self.renderer.draw()
 
     def close(self) -> None:
         pass

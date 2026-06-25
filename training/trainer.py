@@ -7,3 +7,5 @@ class Trainer:
 
     def train(self, timesteps: int) -> None:
         self._agent.train(total_timesteps=timesteps)
+
+        self._agent.save("models/apollo_dqn.zip")
