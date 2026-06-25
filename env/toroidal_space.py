@@ -72,7 +72,7 @@ class ToroidalSpace:
             target_x - source_x
         )
 
-        dy = cls.delta_y(
+        dy = self.delta_y(
             target_y - source_y
         )
 
@@ -112,7 +112,7 @@ class ToroidalSpace:
 
         norm = np.hypot(dx, dy)
 
-        if norm == 0:
+        if norm <= 1e-8:
             return np.zeros(2, dtype=np.float32)
 
         return np.asarray(
